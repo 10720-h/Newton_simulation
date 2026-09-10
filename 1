@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴턴의 과일 자유낙하 충격량 및 생존확률 시뮬레이션</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 650px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            outline: 2px solid #3498db;
+        }
+        .error-msg {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #34495e;
+        }
+        .formula-section {
+            background-color: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 25px;
+            font-size: 0.95rem;
+        }
+        .formula-box {
+            text-align: center;
+            font-family: 'Times New Roman', Times, serif;
+            font-weight: bold;
+            font-size: 1.25rem;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            line-height: 1.6;
+        }
+        .formula-desc {
+            line-height: 1.6;
+            color: #4a5568;
+            font-size: 0.85rem;
+        }
+        .result-section {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px dashed #bdc3c7;
+            background-color: #fffdf9;
+            display: none;
+        }
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #27ae60;
+            text-align: center;
+        }
+        .result-item {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .result-value {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍎 뉴턴 머리 위 과일 낙하 시뮬레이션</h1>
+    
+    <!-- 과일 선택 -->
+    <div class="form-group">
+        <label for="fruit">1. 과일 종류 선택</label>
+        <select id="fruit">
+            <option value="6">수박 (6kg)</option>
+            <option value="1.75">멜론 (1.75kg)</option>
+            <option value="0.6">배 (0.6kg)</option>
+            <option value="0.28" selected>사과 (0.28kg)</option>
+            <option value="0.23">복숭아 (0.23kg)</option>
+            <option value="0.14">바나나 (0.14kg)</option>
+            <option value="0.09">귤 (0.09kg)</option>
+            <option value="0.07">자두 (0.07kg)</option>
+            <option value="0.02">방울토마토 (0.02kg)</option>
+        </select>
+    </div>
+
+    <!-- 행성 선택 -->
+    <div class="form-group">
+        <label for="planet">2. 행성 선택</label>
+        <select id="planet">
+            <option value="3.7">수성 (3.7 m/s²)</option>
+            <option value="8.87">금성 (8.87 m/s²)</option>
+            <option value="9.8" selected>지구 (9.8 m/s²)</option>
+            <option value="3.71">화성 (3.71 m/s²)</option>
+            <option value="24.79">목성 (24.79 m/s²)</option>
+            <option value="10.44">토성 (10.44 m/s²)</option>
+            <option value="8.69">천왕성 (8.69 m/s²)</option>
+            <option value="11.15">해왕성 (11.15 m/s²)</option>
+        </select>
+    </div>
+
+    <!-- 높이 입력 -->
+    <div class="form-group">
+        <label for="height">3. 과일 낙하 시작 높이 (m)</label>
+        <input type="text" id="height" placeholder="예: 5.5 (뉴턴 키 1.68m보다 커야 충격이 발생합니다)">
+        <div id="error-msg" class="error-msg">음수, 소수점을 제외한 문자, 공백은 입력이 불가능하며 다시 입력해달라는 문구</div>
+    </div>
+
+    <button onclick="calculateSimulation()">시뮬레이션 실행</button>
+
+    <!-- 결과 화면 -->
+    <div id="result-section" class="result-section">
+        <div class="result-title">📊 시뮬레이션 결과 (보호구 없음)</div>
+        <div class="result-item">
+            <span>뉴턴이 받은 충격량:</span>
+            <span id="impulse-result" class="result-value">0 N·s</span>
+        </div>
+        <div class="result-item">
+            <span>뉴턴의 생존 확률:</span>
+            <span id="survival-result" class="result-value">100 %</span>
+        </div>
+    </div>
+
+    <!-- 물리 공식 및 설명 설명란 -->
+    <div class="formula-section">
+        <div class="formula-box">
+            <i>I</i> = mv - mv<sub>0</sub><br>
+            v = gt<br>
+            h = (1/2) * gt<sup>2</sup>
+        </div>
+        <div class="formula-desc">
+            <strong>[기호 설명]</strong><br>
+            • <strong><i>I</i></strong>: 충격량<br>
+            • <strong>m</strong>: 과일의 질량<br>
+            • <strong>v</strong>: 과일이 뉴턴의 머리에 부딪힐 때의 속도<br>
+            • <strong>v<sub>0</sub></strong>: 과일이 떨어지기 시작할 때의 속도 (0)<br>
+            • <strong>g</strong>: 뉴턴이 위치한 행성의 중력가속도<br>
+            • <strong>h</strong>: 과일이 떨어지기 시작할 때의 지표면으로부터의 높이<br>
+            • <strong>t</strong>: 과일이 떨어지기 시작해서 뉴턴의 머리에 부딪칠 때까지 걸린 시간
+        </div>
+    </div>
+</div>
+
+<script>
+    const heightInput = document.getElementById('height');
+    const errorMsg = document.getElementById('error-msg');
+
+    heightInput.addEventListener('input', function() {
+        let value = this.value;
+        
+        if (/[^0-9.]/.test(value)) {
+            errorMsg.style.display = 'block';
+            this.value = value.replace(/[^0-9.]/g, '');
+        } else {
+            const dotCount = (value.match(/\./g) || []).length;
+            if (dotCount > 1) {
+                errorMsg.style.display = 'block';
+                this.value = value.substr(0, value.lastIndexOf('.'));
+            } else {
+                errorMsg.style.display = 'none';
+            }
+        }
+    });
+
+    function calculateSimulation() {
+        const rawHeight = heightInput.value.trim();
+        
+        if (rawHeight === '' || isNaN(rawHeight)) {
+            errorMsg.style.display = 'block';
+            alert("높이에 음수, 소수점을 제외한 문자, 공백은 입력이 불가능하며 다시 입력해달라는 문구");
+            return;
+        }
+
+        const h = parseFloat(rawHeight);
+        const m = parseFloat(document.getElementById('fruit').value);
+        const g = parseFloat(document.getElementById('planet').value);
+        const newtonHeight = 1.68;
+
+        if (h <= newtonHeight) {
+            alert(`과일의 낙하 높이는 뉴턴의 앉은키/서 있는 키인 ${newtonHeight}m보다 높아야 머리에 충격을 줍니다! 다시 입력해주세요.`);
+            return;
+        }
+
+        errorMsg.style.display = 'none';
+
+        const impulse = m * Math.sqrt(2 * g * (h - newtonHeight));
+
+        let survivalProbability = 100 / (1 + Math.exp((impulse - 25) / 5));
+        
+        if (impulse < 1) survivalProbability = 100;
+        if (survivalProbability < 0.1) survivalProbability = 0;
+
+        document.getElementById('impulse-result').innerText = impulse.toFixed(2) + " N·s";
+        document.getElementById('survival-result').innerText = survivalProbability.toFixed(1) + " %";
+        document.getElementById('result-section').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
